@@ -37,25 +37,25 @@ contract TokenFactory is Ownable, OwnersRegistry {
         string memory _symbol,
         uint256 _initialSupply
     ) public {
-        address cloneTokenAddress = Clones.clone(superAddress);
-        ERC20Token token = ERC20Token(cloneTokenAddress);
+        address clonedTokenAddress = Clones.clone(superAddress);
+        ERC20Token token = ERC20Token(clonedTokenAddress);
         token.initialize(_name, _symbol, _initialSupply, msg.sender);
         deployedERC20Tokens.push(token);
         // set deployer of this contract
-        setERC20TokenOwner(cloneTokenAddress, msg.sender);
+        setERC20TokenOwner(clonedTokenAddress, msg.sender);
 
-        emit ERC20Created(cloneTokenAddress, msg.sender);
+        emit ERC20Created(clonedTokenAddress, msg.sender);
     }
 
     function createNFT(string memory _name, string memory _symbol) public {
-        address cloneNftAddress = Clones.clone(superAddress);
-        NftToken nft = NftToken(cloneNftAddress);
+        address clonedNftAddress = Clones.clone(superAddress);
+        NftToken nft = NftToken(clonedNftAddress);
         nft.initialize(_name, _symbol);
         deployedNftTokens.push(nft);
         // get deployer of this contract
-        setNFTTokenOwner(cloneNftAddress, msg.sender);
+        setNFTTokenOwner(clonedNftAddress, msg.sender);
 
-        emit NftCreated(cloneNftAddress, msg.sender);
+        emit NftCreated(clonedNftAddress, msg.sender);
     }
 
     function pauseNFTContract(address _contractAddress) external onlyOwner {
