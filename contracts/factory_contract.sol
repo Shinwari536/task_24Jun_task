@@ -10,7 +10,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 
 contract TokenFactory is Ownable, OwnersRegistry {
-    address public superAddress;
+    address public superNftTokenAddress;
+    address public superERC20TokenAddress;
+
 
     ERC20Token[] deployedERC20Tokens;
     NftToken[] deployedNftTokens;
@@ -28,8 +30,9 @@ contract TokenFactory is Ownable, OwnersRegistry {
     // event AllContractsUnPaused(address owner, uint256 timeStamp);
 
 
-    constructor(address _address) {
-        superAddress = _address;
+    constructor(address _nftaddress, address _erc20address) {
+        superNftTokenAddress = _nftaddress;
+        superERC20TokenAddress = _erc20address;
     }
 
     function createToken(
@@ -37,7 +40,7 @@ contract TokenFactory is Ownable, OwnersRegistry {
         string memory _symbol,
         uint256 _initialSupply
     ) public {
-        address clonedTokenAddress = Clones.clone(superAddress);
+        address clonedTokenAddress = Clones.clone(superERC20TokenAddress);
         ERC20Token token = ERC20Token(clonedTokenAddress);
         token.initialize(_name, _symbol, _initialSupply, msg.sender);
         deployedERC20Tokens.push(token);
@@ -48,7 +51,7 @@ contract TokenFactory is Ownable, OwnersRegistry {
     }
 
     function createNFT(string memory _name, string memory _symbol) public {
-        address clonedNftAddress = Clones.clone(superAddress);
+        address clonedNftAddress = Clones.clone(superNftTokenAddress);
         NftToken nft = NftToken(clonedNftAddress);
         nft.initialize(_name, _symbol);
         deployedNftTokens.push(nft);
