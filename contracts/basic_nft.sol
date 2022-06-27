@@ -7,6 +7,8 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "./interfaces/IFactoryContract.sol";
+
 
 contract NftToken is Initializable, ERC721URIStorage, Ownable, Pausable {
     using Counters for Counters.Counter;
@@ -16,12 +18,19 @@ contract NftToken is Initializable, ERC721URIStorage, Ownable, Pausable {
     string private nftName;
     string private nftSymbol;
 
+    IFactoryContract private iFactory;
+
+    modifier NotPauseAllContracts{
+        require(!iFactory.getPauseAllStatus(), "AllPauseable: All contracts are paused.");
+        _;
+    }
     constructor() ERC721("", "") {}
 
-    function initialize(string memory _name, string memory _symbol)
+    function initialize(string memory _name, string memory _symbol, address _factoryAddress)
         public
         initializer
     {
+        iFactory = IFactoryContract(_factoryAddress);
         __ERC721_init(_name, _symbol);
     }
 
@@ -43,6 +52,8 @@ contract NftToken is Initializable, ERC721URIStorage, Ownable, Pausable {
     function _mintNFT(address recipient, string memory _tokenURI)
         public
         onlyOwner
+        NotPauseAllContracts
+        whenNotPaused
         returns (uint256)
     {
         tokenIds.increment();
@@ -55,12 +66,11 @@ contract NftToken is Initializable, ERC721URIStorage, Ownable, Pausable {
         _burn(tokenId);
     }
 
-
-    function puaseContract() public onlyOwner{
+    function puaseContract() public onlyOwner {
         _pause();
     }
 
-    function unPuaseContract() public onlyOwner{
+    function unPuaseContract() public onlyOwner {
         _unpause();
     }
 }
