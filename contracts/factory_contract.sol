@@ -13,13 +13,15 @@ contract TokenFactory is Ownable, OwnersRegistry {
     address public superNftTokenAddress;
     address public superERC20TokenAddress;
 
+    bool private pauseAllStatus;
 
-    ERC20Token[] deployedERC20Tokens;
-    NftToken[] deployedNftTokens;
+
+    ERC20Token[] private deployedERC20Tokens;
+    NftToken[] private deployedNftTokens;
 
     // Creation Events
-    event NftCreated(address nftAddress, address ownerAddress);
-    event ERC20Created(address erc20Address, address ownerAddress);
+    event NftCreated(address nftAddress, address ownerAddress, uint256 index);
+    event ERC20Created(address erc20Address, address ownerAddress, uint256 index);
 
     // Puase Events
     event ContractPaused(address erc20Address, uint256 timeStamp);
@@ -31,8 +33,17 @@ contract TokenFactory is Ownable, OwnersRegistry {
 
 
     constructor(address _nftaddress, address _erc20address) {
+        pauseAllStatus = true;
         superNftTokenAddress = _nftaddress;
         superERC20TokenAddress = _erc20address;
+    }
+
+    function setPauseAllStatus(bool _status) public  onlyOwner{
+        pauseAllStatus = _status;
+    }
+
+    function getPauseAllStatus() external view  returns(bool){
+        return pauseAllStatus;
     }
 
     function createToken(
@@ -42,31 +53,31 @@ contract TokenFactory is Ownable, OwnersRegistry {
     ) public {
         address clonedTokenAddress = Clones.clone(superERC20TokenAddress);
         ERC20Token token = ERC20Token(clonedTokenAddress);
-        token.initialize(_name, _symbol, _initialSupply, msg.sender);
+        token.initialize(_name, _symbol, _initialSupply, msg.sender, address(this));
         deployedERC20Tokens.push(token);
         // set deployer of this contract
         setERC20TokenOwner(clonedTokenAddress, msg.sender);
 
-        emit ERC20Created(clonedTokenAddress, msg.sender);
+        emit ERC20Created(clonedTokenAddress, msg.sender, (deployedERC20Tokens.length - 1));
     }
 
     function createNFT(string memory _name, string memory _symbol) public {
         address clonedNftAddress = Clones.clone(superNftTokenAddress);
         NftToken nft = NftToken(clonedNftAddress);
-        nft.initialize(_name, _symbol);
+        nft.initialize(msg.sender, _name, _symbol, address(this));
         deployedNftTokens.push(nft);
         // get deployer of this contract
         setNFTTokenOwner(clonedNftAddress, msg.sender);
 
-        emit NftCreated(clonedNftAddress, msg.sender);
+        emit NftCreated(clonedNftAddress, msg.sender, (deployedNftTokens.length - 1));
     }
 
-    function pauseNFTContract(address _contractAddress) external onlyOwner {
-        NftToken nftToken = NftToken(_contractAddress);
-        nftToken.puaseContract();
+    // function pauseNFTContract(address _contractAddress) external onlyOwner {
+    //     NftToken nftToken = NftToken(_contractAddress);
+    //     nftToken.puaseContract();
 
-        emit ContractPaused(_contractAddress, block.timestamp);
-    }
+    //     emit ContractPaused(_contractAddress, block.timestamp);
+    // }
 
     function pauseERC20Contract(address _contractAddress) public onlyOwner {
         ERC20Token erc20Token = ERC20Token(_contractAddress);
@@ -74,31 +85,5 @@ contract TokenFactory is Ownable, OwnersRegistry {
 
         emit ContractPaused(_contractAddress, block.timestamp);
     }
-
-    function pauseAllContracts() external onlyOwner {
-        if (deployedNftTokens.length == deployedERC20Tokens.length) {
-            // Pause both tokens
-            for (uint256 index = 0; index < deployedNftTokens.length; index++) {
-                // Pause NFT Tokens
-                deployedNftTokens[index].puaseContract();
-
-                // PausERc20 Token
-                deployedERC20Tokens[index].puaseContract();
-            }
-        } else {
-            // Pause only NftToken
-            for (uint256 index = 0; index < deployedNftTokens.length; index++) {
-                deployedNftTokens[index].puaseContract();
-            }
-
-            // Pause only ERc20Token
-            for (uint256 index = 0; index < deployedERC20Tokens.length; index++) {
-                deployedERC20Tokens[index].puaseContract();
-            }
-        }
-
-        emit AllContractsPaused(msg.sender, block.timestamp);
-    }
-
 
 }
