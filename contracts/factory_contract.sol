@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "hardhat/console.sol";
 import "./basic_token.sol";
-// import "./basic_nft.sol";
+import "./basic_nft.sol";
 import "./owners_registry.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -16,12 +16,12 @@ contract TokenFactory is Ownable, OwnersRegistry {
     bool private pauseAllStatus;
 
 
-    ERC20Token[] deployedERC20Tokens;
-    // NftToken[] deployedNftTokens;
+    ERC20Token[] private deployedERC20Tokens;
+    NftToken[] private deployedNftTokens;
 
     // Creation Events
-    event NftCreated(address nftAddress, address ownerAddress);
-    event ERC20Created(address erc20Address, address ownerAddress);
+    event NftCreated(address nftAddress, address ownerAddress, uint256 index);
+    event ERC20Created(address erc20Address, address ownerAddress, uint256 index);
 
     // Puase Events
     event ContractPaused(address erc20Address, uint256 timeStamp);
@@ -38,7 +38,7 @@ contract TokenFactory is Ownable, OwnersRegistry {
         superERC20TokenAddress = _erc20address;
     }
 
-    function setPauseAllStatus(bool _status) public onlyOwner {
+    function setPauseAllStatus(bool _status) public  onlyOwner{
         pauseAllStatus = _status;
     }
 
@@ -58,22 +58,22 @@ contract TokenFactory is Ownable, OwnersRegistry {
         // set deployer of this contract
         setERC20TokenOwner(clonedTokenAddress, msg.sender);
 
-        emit ERC20Created(clonedTokenAddress, msg.sender);
+        emit ERC20Created(clonedTokenAddress, msg.sender, (deployedERC20Tokens.length - 1));
     }
 
-    // function createNFT(string memory _name, string memory _symbol) public {
-    //     address clonedNftAddress = Clones.clone(superNftTokenAddress);
-    //     NftToken nft = NftToken(clonedNftAddress);
-    //     nft.initialize(_name, _symbol, address(this));
-    //     deployedNftTokens.push(nft);
-    //     // get deployer of this contract
-    //     setNFTTokenOwner(clonedNftAddress, msg.sender);
+    function createNFT(string memory _name, string memory _symbol) public {
+        address clonedNftAddress = Clones.clone(superNftTokenAddress);
+        NftToken nft = NftToken(clonedNftAddress);
+        nft.initialize(msg.sender, _name, _symbol, address(this));
+        deployedNftTokens.push(nft);
+        // get deployer of this contract
+        setNFTTokenOwner(clonedNftAddress, msg.sender);
 
-    //     emit NftCreated(clonedNftAddress, msg.sender);
-    // }
+        emit NftCreated(clonedNftAddress, msg.sender, (deployedNftTokens.length - 1));
+    }
 
     // function pauseNFTContract(address _contractAddress) external onlyOwner {
-    //     // NftToken nftToken = NftToken(_contractAddress);
+    //     NftToken nftToken = NftToken(_contractAddress);
     //     nftToken.puaseContract();
 
     //     emit ContractPaused(_contractAddress, block.timestamp);

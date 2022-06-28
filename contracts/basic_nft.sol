@@ -2,62 +2,54 @@
 pragma solidity ^0.8.0;
 
 import "hardhat/console.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "./interfaces/IFactoryContract.sol";
 
+contract NftToken is
+    ERC721URIStorageUpgradeable,
+    OwnableUpgradeable,
+    PausableUpgradeable
+{
+    using CountersUpgradeable for CountersUpgradeable.Counter;
 
-contract NftToken is Initializable, ERC721URIStorage, Ownable, Pausable {
-    using Counters for Counters.Counter;
+    CountersUpgradeable.Counter private tokenIds;
 
-    Counters.Counter private tokenIds;
-
-    string private nftName;
-    string private nftSymbol;
+    // string private nftName;
+    // string private nftSymbol;
 
     IFactoryContract private iFactory;
 
-    modifier NotPauseAllContracts{
-        require(!iFactory.getPauseAllStatus(), "AllPauseable: All contracts are paused.");
+    modifier NotPauseAllContracts() {
+        require(
+            iFactory.getPauseAllStatus() == true,
+            "AllPauseable: All contracts are paused."
+        );
         _;
     }
-    constructor() ERC721("", "") {}
 
-    function initialize(string memory _name, string memory _symbol, address _factoryAddress)
-        public
-        initializer
-    {
+    function initialize(
+        address _owner,
+        string memory _name,
+        string memory _symbol,
+        address _factoryAddress
+    ) public initializer {
         iFactory = IFactoryContract(_factoryAddress);
         __ERC721_init(_name, _symbol);
+        _transferOwnership(_owner);
     }
 
-    function __ERC721_init(string memory _name, string memory _symbol)
-        internal
-    {
-        nftName = _name;
-        nftSymbol = _symbol;
-    }
-
-    function name() public view virtual override returns (string memory) {
-        return nftName;
-    }
-
-    function symbol() public view virtual override returns (string memory) {
-        return nftSymbol;
-    }
-
-    function _mintNFT(address recipient, string memory _tokenURI)
-        public
+    function mintNFT(address recipient, string memory _tokenURI)
+        external
         onlyOwner
         NotPauseAllContracts
         whenNotPaused
         returns (uint256)
     {
         tokenIds.increment();
-        _mint(recipient, tokenIds.current());
+        _safeMint(recipient, tokenIds.current(), bytes("minting nft"));
         _setTokenURI(tokenIds.current(), _tokenURI);
         return tokenIds.current();
     }
@@ -66,11 +58,11 @@ contract NftToken is Initializable, ERC721URIStorage, Ownable, Pausable {
         _burn(tokenId);
     }
 
-    function puaseContract() public onlyOwner {
+    function puaseContract() external onlyOwner {
         _pause();
     }
 
-    function unPuaseContract() public onlyOwner {
+    function unPuaseContract() external onlyOwner {
         _unpause();
     }
 }
