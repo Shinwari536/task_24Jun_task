@@ -405,28 +405,6 @@ describe("TokenFactory", function () {
 
   })
 
-  // describe.only("Owners of dynamically deployed multiple contracts", function(){
-  //   it("Should deploy ERC20 token dynamically.", async function () {
-  //     let tokenDeployed
-  //     const token1 = await tokenFactory.createToken(_name, _symbol, _supply);
-  //     const token2 = await tokenFactory.createToken(_name, _symbol, _supply);
-  //     const token3 = await tokenFactory.createToken(_name, _symbol, _supply);
-  //     const token4 = await tokenFactory.createToken(_name, _symbol, _supply);
-  //     const token5 = await tokenFactory.createToken(_name, _symbol, _supply);
-  //     const token6 = await tokenFactory.createToken(_name, _symbol, _supply);
-
-  //     const waitData = await tokenDeployed.wait();
-
-  //     const erc20Addr = waitData.events[3].args.erc20Address;
-  //     const erc20Tkn = erc20Contract.attach(erc20Addr);
-
-  //     expect(await erc20Tkn.name()).to.equal(_name);
-  //     expect(await erc20Tkn.symbol()).to.equal(_symbol);
-  //     expect(await erc20Tkn.totalSupply()).to.equal(_supply);
-  //     expect(await erc20Tkn.balanceOf(owner.address)).to.equal(_supply);
-  //   });
-  // })
-
   describe("Pause Contract.", function () {
     it("Should pause nft token only by owner", async function () {
       // dynamically deploy nft contract
